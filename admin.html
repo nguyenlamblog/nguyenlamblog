@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ConCat Admin — Nhập Dữ Liệu Vào Google Sheet</title>
+<title>ConCat Admin — Nhập Dữ Liệu Chạy Uber</title>
 <style>
   :root { --bg: #f7f5f0; --paper: #fff; --border: #e9e2d7; --ink: #171717; --green: #208252; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Arial, sans-serif; padding: 20px; }
@@ -21,58 +21,57 @@
 </head>
 <body>
 <main>
-  <a href="index.html" class="nav-link">← Xem Trang Chủ (index.html)</a>
-  <h1>Quản Trị ConCat (Google Sheet)</h1>
+  <a href="index.html" class="nav-link">← Xem Trang Chủ Uber (index.html)</a>
+  <h1>Quản Trị Thu Nhập Uber</h1>
 
   <!-- FORM 1: THÊM NHẬT KÝ -->
   <div class="card">
-    <h2>1. Thêm Nhật Ký Mới</h2>
+    <h2>1. Thêm Nhật KÝ Ca Chạy</h2>
     <form id="logForm">
       <div class="form-group">
-        <label>Nội dung nhật ký AI</label>
-        <textarea id="logContent" placeholder="Nhập nhật ký biến động đơn hàng, quảng cáo..." required></textarea>
+        <label>Nội dung nhật ký ca chạy</label>
+        <textarea id="logContent" placeholder="VD: Hôm nay chạy ca tối nổ 10 cuốc, thời tiết đẹp..." required></textarea>
       </div>
       <button type="submit" class="btn" id="btnLog">Gửi Lên Google Sheet</button>
     </form>
   </div>
 
-  <!-- FORM 2: THÊM SẢN PHẨM -->
+  <!-- FORM 2: THÊM CA CHẠY / DỊCH VỤ -->
   <div class="card">
-    <h2>2. Thêm Sản Phẩm / Chiến Dịch Mới</h2>
+    <h2>2. Thêm Ca Chạy / Dịch Vụ Mới</h2>
     <form id="prodForm">
       <div class="form-group">
-        <label>Tên sản phẩm / Camp</label>
-        <input type="text" id="pName" placeholder="VD: Áo Thun ConCat" required>
+        <label>Dịch vụ / Ca chạy</label>
+        <input type="text" id="pName" placeholder="VD: Uber Eats Sáng 02/11" required>
       </div>
       <div class="form-group">
-        <label>Chi quảng cáo (VNĐ)</label>
+        <label>Chi phí xăng / xe (VNĐ)</label>
         <input type="number" id="pSpend" value="0" required>
       </div>
       <div class="form-group">
-        <label>Đơn giá sản phẩm (VNĐ)</label>
+        <label>Thu nhập TB/chuyến (VNĐ)</label>
         <input type="number" id="pPrice" value="0" required>
       </div>
       <div class="form-group">
-        <label>Số đơn</label>
+        <label>Số chuyến / đơn hoàn thành</label>
         <input type="number" id="pOrders" value="0" required>
       </div>
       <div class="form-group">
         <label>Trạng thái</label>
         <select id="pStatus">
           <option value="Hoàn thành">Hoàn thành</option>
-          <option value="Đã tắt (Lỗ)">Đã tắt (Lỗ)</option>
+          <option value="Tạm nghỉ">Tạm nghỉ</option>
         </select>
       </div>
-      <button type="submit" class="btn" id="btnProd">Thêm Sản Phẩm Lên Sheet</button>
+      <button type="submit" class="btn" id="btnProd">Lưu Ca Chạy Lên Sheet</button>
     </form>
   </div>
 </main>
 
 <script>
   // DÁN URL GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO ĐÂY:
-  const API_URL = "https://script.google.com/macros/s/AKfycbzepqkqRBFL045miCu15RXhf3BKubNkICuWb4BXkkhf1RaG2EZyQxPQd5QBOz7rJ9JPgw/exec";
+  const API_URL = "URL_WEB_APP_CUA_BAN";
 
-  // Xử lý gửi Nhật ký
   document.getElementById('logForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('btnLog');
@@ -94,17 +93,16 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      alert("Đã lưu nhật ký vào Google Sheet thành công!");
+      alert("Đã lưu nhật ký Uber thành công!");
       document.getElementById('logContent').value = "";
     } catch (err) {
-      alert("Có lỗi xảy ra: " + err);
+      alert("Lỗi: " + err);
     } finally {
       btn.disabled = false;
       btn.textContent = "Gửi Lên Google Sheet";
     }
   });
 
-  // Xử lý gửi Sản phẩm
   document.getElementById('prodForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const btn = document.getElementById('btnProd');
@@ -127,13 +125,13 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       });
-      alert("Đã thêm sản phẩm vào Google Sheet thành công!");
+      alert("Đã lưu ca chạy Uber thành công!");
       document.getElementById('pName').value = "";
     } catch (err) {
-      alert("Có lỗi xảy ra: " + err);
+      alert("Lỗi: " + err);
     } finally {
       btn.disabled = false;
-      btn.textContent = "Thêm Sản Phẩm Lên Sheet";
+      btn.textContent = "Lưu Ca Chạy Lên Sheet";
     }
   });
 </script>
