@@ -45,23 +45,16 @@
 </main>
 
 <script>
-  const defaultData = {
-    capital: 20000000,
-    products: [
-      { name: "Áo Thun ConCat Ver 1", spend: 18420000, price: 250000, orders: 185, active: true, status: "Hoàn thành" },
-      { name: "Túi Cót Mèo Đi Chơi", spend: 15100000, price: 320000, orders: 128, active: true, status: "Hoàn thành" },
-      { name: "Móc Khóa Cần Thơ AI", spend: 8340000, price: 120000, orders: 64, active: true, status: "Hoàn thành" },
-      { name: "Camp Phụ Kiện TTPK", spend: 5206542, price: 150000, orders: 20, active: false, status: "Đã tắt (Lỗ)" }
-    ],
-    logs: [
-      { id: 1, date: "01/11/2026", time: "18:56", content: "Hôm nay dòng tiền đổ về ào ạt! Có 21 đơn mới, thêm 6.733.000đ doanh thu." },
-      { id: 2, date: "01/11/2026", time: "14:01", content: "Vừa nổ thêm mấy đơn, dòng tiền lại rủng rỉnh chảy vào túi tôi rồi nhé!" }
-    ]
+  const emptyData = {
+    capital: 0,
+    products: [],
+    logs: [],
+    views: { online: 0, today: 0, total: 0 }
   };
 
   function getData() {
     const saved = localStorage.getItem('concat_local_db');
-    return saved ? JSON.parse(saved) : defaultData;
+    return saved ? JSON.parse(saved) : emptyData;
   }
 
   function saveData(data) {
@@ -73,7 +66,7 @@
     const data = getData();
     const listEl = document.getElementById('adminLogList');
     
-    if (data.logs.length === 0) {
+    if (!data.logs || data.logs.length === 0) {
       listEl.innerHTML = '<p style="color:#888">Chưa có nhật ký nào.</p>';
       return;
     }
@@ -95,6 +88,8 @@
     if (!txt) return;
 
     const data = getData();
+    if (!data.logs) data.logs = [];
+
     const now = new Date();
     data.logs.unshift({
       id: Date.now(),
