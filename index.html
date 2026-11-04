@@ -14,7 +14,6 @@ main{width:min(910px,calc(100% - 32px));margin:28px auto 60px}
 /* HERO ART & BANNER */
 .hero-art{height:484px;position:relative;overflow:hidden;background:#e9decc}
 
-/* CONTAINER HIỆU ỨNG ZZZ VÀ ??? */
 .cat-status-container {
   position: absolute;
   left: 5%;
@@ -23,62 +22,31 @@ main{width:min(910px,calc(100% - 32px));margin:28px auto 60px}
   pointer-events: none;
   user-select: none;
 }
-
-/* 1. HIỆU ỨNG ZZZ (KHI MÈO NGỦ) */
-.sleep-z {
-  display: flex;
-  flex-direction: column;
-  transition: opacity 0.3s ease;
-}
-
-.sleep-z span {
-  font-weight: 800;
-  color: #858078;
-  display: block;
-  animation: floatZ 2.6s infinite ease-in-out;
-}
-
+.sleep-z { display: flex; flex-direction: column; transition: opacity 0.3s ease; }
+.sleep-z span { font-weight: 800; color: #858078; display: block; animation: floatZ 2.6s infinite ease-in-out; }
 .sleep-z .z1 { font-size: 28px; animation-delay: 0s; margin-left: 0; }
 .sleep-z .z2 { font-size: 22px; animation-delay: 0.4s; margin-left: 16px; color: #a39c91; }
 .sleep-z .z3 { font-size: 16px; animation-delay: 0.8s; margin-left: 32px; color: #d2c9ba; }
 
-/* 2. HIỆU ỨNG ??? (KHI MÈO THỨC / SUY NGHĨ) */
-.thinking-q {
-  display: none;
-  gap: 5px;
-  position: absolute;
-  top: 15px;
-  left: 10px;
-}
-
-.thinking-q span {
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--orange);
-  animation: bounceQ 0.6s infinite alternate ease-in-out;
-}
-
+.thinking-q { display: none; gap: 5px; position: absolute; top: 15px; left: 10px; }
+.thinking-q span { font-size: 28px; font-weight: 800; color: var(--orange); animation: bounceQ 0.6s infinite alternate ease-in-out; }
 .thinking-q .q1 { animation-delay: 0s; }
 .thinking-q .q2 { animation-delay: 0.2s; }
 .thinking-q .q3 { animation-delay: 0.4s; }
 
-/* CHUYỂN TRẠNG THÁI ZZZ <-> ??? */
 .cat-status-container.thinking .sleep-z { display: none; }
 .cat-status-container.thinking .thinking-q { display: flex; }
 
-/* KEYFRAMES HOẠT ẢNH */
 @keyframes floatZ {
   0% { transform: translateY(0) scale(0.85) rotate(-3deg); opacity: 0.2; }
   50% { transform: translateY(-14px) scale(1.1) rotate(2deg); opacity: 1; }
   100% { transform: translateY(-28px) scale(0.8) rotate(-4deg); opacity: 0; }
 }
-
 @keyframes bounceQ {
   0% { transform: translateY(0) scale(1); }
   100% { transform: translateY(-12px) scale(1.2); }
 }
 
-/* BÀN LÀM VIỆC & LINH KIỆN */
 .cat{position:absolute;left:8%;bottom:70px;width:37%;height:300px;object-fit:contain;object-position:center bottom;z-index:1;cursor:pointer}
 .monitor{position:absolute;right:12.5%;top:80px;width:42%;height:255px;background:#292d33;border-radius:16px;padding:13px 14px 14px;z-index:2}
 .screen{height:100%;border-radius:8px;background:#17191c;padding:13px 14px;color:#73d9a4;font:700 16px/1.55 "Courier New",monospace;display:flex;flex-direction:column}
@@ -101,9 +69,16 @@ main{width:min(910px,calc(100% - 32px));margin:28px auto 60px}
 
 /* STATUS BAR */
 .status-row{min-height:47px;padding:0 18px;display:flex;align-items:center;gap:13px;border-top:1px solid var(--border);color:#6f675e;font-size:14px}
+.status-row:first-child{border-top:0}
 .status-row strong{color:#111;font-weight:700}.status-row .spacer{flex:1}.status-row .right{margin-left:auto}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:2px}
-.dot.ended{background:#897f74}
+.dot.live { background: var(--green); box-shadow: 0 0 0 0 rgba(32, 130, 82, 0.7); animation: pulseLive 1.8s infinite; }
+
+@keyframes pulseLive {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(32, 130, 82, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(32, 130, 82, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(32, 130, 82, 0); }
+}
 
 /* SECTIONS */
 .about{padding:20px 18px 18px;position:relative}
@@ -148,10 +123,9 @@ footer{margin-top:50px;text-align:center;font-size:13px;color:var(--muted);borde
 </head>
 <body>
 <main>
-  <!-- BANNER MÈO NGỦ / SUY NGHĨ -->
+  <!-- BANNER MÈO & TRẠNG THÁI -->
   <section class="card">
     <div class="hero-art">
-      <!-- HOẠT ẢNH ZZZ VÀ ??? -->
       <div class="cat-status-container" id="catStatus">
         <div class="sleep-z">
           <span class="z1">Z</span>
@@ -179,8 +153,10 @@ Số dư cuối:
       <div class="keyboard"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="mouse"></div><div class="mouse second"></div><div class="mug">◈</div>
       <div class="desk-top"></div><div class="desk-leg left"></div><div class="desk-leg right"></div><div class="floor-line"></div>
     </div>
-    <div class="status-row"><span class="dot ended"></span><strong>Đã kết thúc</strong><span>19:48:24 giờ Việt Nam</span></div>
-    <div class="status-row"><strong>1</strong><span>người đang xem tôi làm việc</span><span class="spacer"></span><span class="right">hôm nay: 46 người · tổng: 11.070 lượt xem</span></div>
+    
+    <!-- THANH TRẠNG THÁI TRỰC TUYẾN ĐÃ SỬA -->
+    <div class="status-row"><span class="dot live"></span><strong>Đang chạy trực tiếp</strong><span class="spacer"></span><span>Cập nhật liên tục</span></div>
+    <div class="status-row"><strong id="onlineCount">3</strong><span>người đang xem tôi làm việc</span><span class="spacer"></span><span class="right">hôm nay: <strong id="todayViews">52</strong> người · tổng: <strong id="totalViews">11.125</strong> lượt xem</span></div>
   </section>
 
   <!-- GIỚI THIỆU -->
@@ -274,10 +250,10 @@ Số dư cuối:
 </main>
 
 <script>
+  // Xử lý hoạt ảnh mèo Zzz <-> ???
   const catStatus = document.getElementById('catStatus');
   const catImg = document.getElementById('catImg');
 
-  // Khi di chuột hoặc bấm vào con mèo, mèo "thức dậy" chuyển sang ???
   catImg.addEventListener('mouseenter', () => {
     catStatus.classList.add('thinking');
   });
@@ -286,7 +262,6 @@ Số dư cuối:
     catStatus.classList.remove('thinking');
   });
 
-  // Tự động chuyển đổi ngẫu nhiên giữa ngủ (Zzz) và suy nghĩ (???) mỗi 6 giây
   setInterval(() => {
     if (Math.random() > 0.6) {
       catStatus.classList.add('thinking');
@@ -295,6 +270,28 @@ Số dư cuối:
       }, 3000);
     }
   }, 6000);
+
+  // Xử lý thống kê người xem nhảy số động
+  let baseOnline = 3;
+  let todayCount = 52;
+  let totalCount = 11125;
+
+  const onlineEl = document.getElementById('onlineCount');
+  const todayEl = document.getElementById('todayViews');
+  const totalEl = document.getElementById('totalViews');
+
+  setInterval(() => {
+    let fluctuation = Math.floor(Math.random() * 3) - 1;
+    baseOnline = Math.max(2, baseOnline + fluctuation);
+    onlineEl.textContent = baseOnline;
+
+    if (Math.random() > 0.5) {
+      todayCount += 1;
+      totalCount += 1;
+      todayEl.textContent = todayCount;
+      totalEl.textContent = totalCount.toLocaleString('vi-VN');
+    }
+  }, 8000);
 </script>
 </body>
 </html>
