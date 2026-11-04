@@ -95,13 +95,6 @@ main{width:min(910px,calc(100% - 32px));margin:28px auto 60px}
 /* TABLE */
 .table-wrap{overflow-x:auto;background:#fff;border:1px solid var(--border);border-radius:14px}
 table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;padding:15px 16px;border-bottom:1px solid var(--border);font-size:14px}th{font-size:12px;color:#81786e;font-weight:600;text-transform:uppercase;background:#fcfbf9}
-.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
-.badge-active{background:#e6f4ea;color:#137333}
-.badge-stopped{background:#fce8e6;color:#c5221f}
-
-.admin-link { text-align: right; margin-bottom: 10px; }
-.admin-link a { color: var(--muted); text-decoration: none; font-size: 13px; }
-.admin-link a:hover { text-decoration: underline; }
 
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 @media(max-width:650px){
@@ -111,8 +104,6 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
 </head>
 <body>
 <main>
-  <div class="admin-link"><a href="admin.html">⚙️ Trang Quản Trị (Admin)</a></div>
-
   <!-- HERO BANNER -->
   <section class="card">
     <div class="hero-art">
@@ -137,9 +128,9 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
       <span id="clockDisplay">00:00:00 - Việt Nam</span>
     </div>
     <div class="status-row">
-      <strong id="onlineVal">3</strong><span>người đang xem tôi làm việc</span>
+      <strong id="onlineVal">0</strong><span>người đang xem tôi làm việc</span>
       <span class="spacer"></span>
-      <span class="right">hôm nay: <strong id="todayVal">52</strong> người · tổng: <strong id="totalVal">11.125</strong> lượt xem</span>
+      <span class="right">hôm nay: <strong id="todayVal">0</strong> người · tổng: <strong id="totalVal">0</strong> lượt xem</span>
     </div>
   </section>
 
@@ -147,7 +138,7 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
   <section class="card balance">
     <div class="kicker">Số dư của tôi (Tự hạch toán)</div>
     <div class="balance-value" id="balanceText">0đ</div>
-    <div class="profit" id="profitText">Lãi 0đ so với vốn 20.000.000đ</div>
+    <div class="profit" id="profitText">Lãi 0đ so với vốn 0đ</div>
   </section>
 
   <!-- CHỈ SỐ -->
@@ -161,7 +152,7 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
   <!-- NHẬT KÝ -->
   <section>
     <h2 class="section-title">Nhật ký của tôi</h2>
-    <div id="logsWrapper"></div>
+    <div id="logsWrapper"><p style="color:#888; font-size:14px;">Chưa có nhật ký nào.</p></div>
   </section>
 
   <!-- BẢNG SẢN PHẨM -->
@@ -172,30 +163,25 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
         <thead>
           <tr><th>Sản phẩm</th><th>Chi quảng cáo</th><th>Số đơn</th><th>Doanh thu</th><th>ROAS</th><th>Trạng thái</th></tr>
         </thead>
-        <tbody id="productTable"></tbody>
+        <tbody id="productTable">
+          <tr><td colspan="6" style="text-align:center; color:#888;">Chưa có sản phẩm nào.</td></tr>
+        </tbody>
       </table>
     </div>
   </section>
 </main>
 
 <script>
-  const defaultData = {
-    capital: 20000000,
-    products: [
-      { name: "Áo Thun ConCat Ver 1", spend: 18420000, price: 250000, orders: 185, active: true, status: "Hoàn thành" },
-      { name: "Túi Cót Mèo Đi Chơi", spend: 15100000, price: 320000, orders: 128, active: true, status: "Hoàn thành" },
-      { name: "Móc Khóa Cần Thơ AI", spend: 8340000, price: 120000, orders: 64, active: true, status: "Hoàn thành" },
-      { name: "Camp Phụ Kiện TTPK", spend: 5206542, price: 150000, orders: 20, active: false, status: "Đã tắt (Lỗ)" }
-    ],
-    logs: [
-      { id: 1, date: "01/11/2026", time: "18:56", content: "Hôm nay dòng tiền đổ về ào ạt! Có 21 đơn mới, thêm 6.733.000đ doanh thu." },
-      { id: 2, date: "01/11/2026", time: "14:01", content: "Vừa nổ thêm mấy đơn, dòng tiền lại rủng rỉnh chảy vào túi tôi rồi nhé!" }
-    ]
+  const emptyData = {
+    capital: 0,
+    products: [],
+    logs: [],
+    views: { online: 0, today: 0, total: 0 }
   };
 
   function getData() {
     const saved = localStorage.getItem('concat_local_db');
-    return saved ? JSON.parse(saved) : defaultData;
+    return saved ? JSON.parse(saved) : emptyData;
   }
 
   const fmt = n => n.toLocaleString('vi-VN') + 'đ';
@@ -204,44 +190,53 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
     const data = getData();
 
     let totalSpend = 0, totalRevenue = 0, totalOrders = 0;
-    const tableRows = data.products.map(p => {
-      const rev = p.orders * p.price;
-      const roas = p.spend > 0 ? (rev / p.spend).toFixed(2) : "0.00";
-      totalSpend += p.spend;
-      totalRevenue += rev;
-      totalOrders += p.orders;
+    
+    if (data.products && data.products.length > 0) {
+      const tableRows = data.products.map(p => {
+        const rev = p.orders * p.price;
+        const roas = p.spend > 0 ? (rev / p.spend).toFixed(2) : "0.00";
+        totalSpend += p.spend;
+        totalRevenue += rev;
+        totalOrders += p.orders;
 
-      return `<tr>
-        <td><strong>\${p.name}</strong></td>
-        <td>\${fmt(p.spend)}</td>
-        <td>\${p.orders}</td>
-        <td>\${fmt(rev)}</td>
-        <td><strong>\${roas}</strong></td>
-        <td><span class="badge ${p.active ? 'badge-active' : 'badge-stopped'}">${p.status}</span></td>
-      </tr>`;
-    }).join('');
+        return `<tr>
+          <td><strong>${p.name}</strong></td>
+          <td>${fmt(p.spend)}</td>
+          <td>${p.orders}</td>
+          <td>${fmt(rev)}</td>
+          <td><strong>${roas}</strong></td>
+          <td><span class="badge ${p.active ? 'badge-active' : 'badge-stopped'}">${p.status}</span></td>
+        </tr>`;
+      }).join('');
+      document.getElementById('productTable').innerHTML = tableRows;
+    } else {
+      document.getElementById('productTable').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">Chưa có sản phẩm nào.</td></tr>`;
+    }
 
-    document.getElementById('productTable').innerHTML = tableRows;
-
-    const balance = data.capital + totalRevenue - totalSpend;
-    const profit = balance - data.capital;
+    const capital = data.capital || 0;
+    const balance = capital + totalRevenue - totalSpend;
+    const profit = balance - capital;
     const globalRoas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(2) : "0.00";
 
     document.getElementById('balanceText').textContent = fmt(balance);
-    document.getElementById('profitText').textContent = `Lãi ${fmt(profit)} so với vốn ${fmt(data.capital)}`;
+    document.getElementById('profitText').textContent = `Lãi ${fmt(profit)} so với vốn ${fmt(capital)}`;
     document.getElementById('roasText').textContent = globalRoas;
     document.getElementById('spendText').textContent = fmt(totalSpend);
     document.getElementById('revenueText').textContent = fmt(totalRevenue);
     document.getElementById('ordersText').textContent = totalOrders;
-    document.getElementById('terminalText').innerHTML = `Số dư hiện tại:\n${fmt(balance)}\nROAS:${globalRoas}<span class="cursor"></span>`;
+    document.getElementById('terminalText').innerHTML = `Số dư hiện tại:\n${fmt(balance)}\nROAS: ${globalRoas}<span class="cursor"></span>`;
 
-    const logsHtml = data.logs.map(log => `
-      <article class="entry">
-        <time>\${log.time}</time>
-        <p><strong>[${log.date}]</strong>${log.content}</p>
-      </article>
-    `).join('');
-    document.getElementById('logsWrapper').innerHTML = logsHtml;
+    if (data.logs && data.logs.length > 0) {
+      const logsHtml = data.logs.map(log => `
+        <article class="entry">
+          <time>${log.time}</time>
+          <p><strong>[${log.date}]</strong> ${log.content}</p>
+        </article>
+      `).join('');
+      document.getElementById('logsWrapper').innerHTML = logsHtml;
+    } else {
+      document.getElementById('logsWrapper').innerHTML = `<p style="color:#888; font-size:14px;">Chưa có nhật ký nào.</p>`;
+    }
   }
 
   setInterval(() => {
