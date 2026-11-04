@@ -3,115 +3,139 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ConCat Admin — Quản Trị Nhật Ký</title>
+<title>ConCat Admin — Nhập Dữ Liệu Vào Google Sheet</title>
 <style>
-  :root { --bg: #f7f5f0; --paper: #fff; --border: #e9e2d7; --ink: #171717; --green: #208252; --red: #c5221f; }
+  :root { --bg: #f7f5f0; --paper: #fff; --border: #e9e2d7; --ink: #171717; --green: #208252; }
   body { margin: 0; background: var(--bg); color: var(--ink); font-family: Arial, sans-serif; padding: 20px; }
-  main { max-width: 800px; margin: 0 auto; }
+  main { max-width: 650px; margin: 0 auto; }
   .card { background: var(--paper); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
   h1, h2 { margin-top: 0; }
   .form-group { margin-bottom: 15px; }
   label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
-  textarea { width: 100%; height: 90px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; resize: vertical; }
-  .btn { background: var(--green); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; }
-  .btn-danger { background: var(--red); padding: 5px 10px; font-size: 12px; border-radius: 6px; color: white; border: none; cursor: pointer; }
-  .log-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--border); }
-  .log-item:last-child { border-bottom: 0; }
+  input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+  textarea { height: 90px; resize: vertical; }
+  .btn { background: var(--green); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; font-size: 16px; }
+  .btn:disabled { background: #ccc; }
   .nav-link { display: inline-block; margin-bottom: 15px; color: var(--green); text-decoration: none; font-weight: bold; }
 </style>
 </head>
 <body>
 <main>
-  <a href="index.html" class="nav-link">← Quay lại Trang Chủ (ConCat)</a>
-  <h1>Quản Trị Hệ Thống ConCat</h1>
+  <a href="index.html" class="nav-link">← Xem Trang Chủ (index.html)</a>
+  <h1>Quản Trị ConCat (Google Sheet)</h1>
 
-  <!-- FORM THÊM NHẬT KÝ -->
+  <!-- FORM 1: THÊM NHẬT KÝ -->
   <div class="card">
-    <h2>+ Đăng Nhật Ký Mới</h2>
-    <form id="adminLogForm">
+    <h2>1. Thêm Nhật Ký Mới</h2>
+    <form id="logForm">
       <div class="form-group">
         <label>Nội dung nhật ký AI</label>
-        <textarea id="logContent" placeholder="Nhập nội dung thông báo, kết quả chạy ads..." required></textarea>
+        <textarea id="logContent" placeholder="Nhập nhật ký biến động đơn hàng, quảng cáo..." required></textarea>
       </div>
-      <button type="submit" class="btn">Đăng Bài Ngay</button>
+      <button type="submit" class="btn" id="btnLog">Gửi Lên Google Sheet</button>
     </form>
   </div>
 
-  <!-- DANH SÁCH QUẢN LÝ -->
+  <!-- FORM 2: THÊM SẢN PHẨM -->
   <div class="card">
-    <h2>Danh Sách Nhật Ký Hiện Có</h2>
-    <div id="adminLogList"></div>
+    <h2>2. Thêm Sản Phẩm / Chiến Dịch Mới</h2>
+    <form id="prodForm">
+      <div class="form-group">
+        <label>Tên sản phẩm / Camp</label>
+        <input type="text" id="pName" placeholder="VD: Áo Thun ConCat" required>
+      </div>
+      <div class="form-group">
+        <label>Chi quảng cáo (VNĐ)</label>
+        <input type="number" id="pSpend" value="0" required>
+      </div>
+      <div class="form-group">
+        <label>Đơn giá sản phẩm (VNĐ)</label>
+        <input type="number" id="pPrice" value="0" required>
+      </div>
+      <div class="form-group">
+        <label>Số đơn</label>
+        <input type="number" id="pOrders" value="0" required>
+      </div>
+      <div class="form-group">
+        <label>Trạng thái</label>
+        <select id="pStatus">
+          <option value="Hoàn thành">Hoàn thành</option>
+          <option value="Đã tắt (Lỗ)">Đã tắt (Lỗ)</option>
+        </select>
+      </div>
+      <button type="submit" class="btn" id="btnProd">Thêm Sản Phẩm Lên Sheet</button>
+    </form>
   </div>
 </main>
 
 <script>
-  const emptyData = {
-    capital: 0,
-    products: [],
-    logs: [],
-    views: { online: 0, today: 0, total: 0 }
-  };
+  // DÁN URL GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO ĐÂY:
+  const API_URL = "https://script.google.com/macros/s/AKfycbzepqkqRBFL045miCu15RXhf3BKubNkICuWb4BXkkhf1RaG2EZyQxPQd5QBOz7rJ9JPgw/exec";
 
-  function getData() {
-    const saved = localStorage.getItem('concat_local_db');
-    return saved ? JSON.parse(saved) : emptyData;
-  }
-
-  function saveData(data) {
-    localStorage.setItem('concat_local_db', JSON.stringify(data));
-    renderAdmin();
-  }
-
-  function renderAdmin() {
-    const data = getData();
-    const listEl = document.getElementById('adminLogList');
-    
-    if (!data.logs || data.logs.length === 0) {
-      listEl.innerHTML = '<p style="color:#888">Chưa có nhật ký nào.</p>';
-      return;
-    }
-
-    listEl.innerHTML = data.logs.map((log, index) => `
-      <div class="log-item">
-        <div>
-          <div style="font-size: 12px; color: #786f66; margin-bottom: 4px;">⏰ ${log.time} — ${log.date}</div>
-          <div>${log.content}</div>
-        </div>
-        <button class="btn-danger" onclick="deleteLog(${index})">Xóa</button>
-      </div>
-    `).join('');
-  }
-
-  document.getElementById('adminLogForm').addEventListener('submit', function(e) {
+  // Xử lý gửi Nhật ký
+  document.getElementById('logForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const txt = document.getElementById('logContent').value.trim();
-    if (!txt) return;
-
-    const data = getData();
-    if (!data.logs) data.logs = [];
+    const btn = document.getElementById('btnLog');
+    btn.disabled = true;
+    btn.textContent = "Đang lưu...";
 
     const now = new Date();
-    data.logs.unshift({
-      id: Date.now(),
+    const payload = {
+      type: "add_log",
       date: now.toLocaleDateString('vi-VN'),
       time: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
-      content: txt
-    });
+      content: document.getElementById('logContent').value.trim()
+    };
 
-    saveData(data);
-    document.getElementById('logContent').value = '';
-    alert('Đăng nhật ký thành công!');
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      alert("Đã lưu nhật ký vào Google Sheet thành công!");
+      document.getElementById('logContent').value = "";
+    } catch (err) {
+      alert("Có lỗi xảy ra: " + err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Gửi Lên Google Sheet";
+    }
   });
 
-  window.deleteLog = function(index) {
-    if (confirm('Bạn có chắc muốn xóa bản ghi này?')) {
-      const data = getData();
-      data.logs.splice(index, 1);
-      saveData(data);
-    }
-  };
+  // Xử lý gửi Sản phẩm
+  document.getElementById('prodForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnProd');
+    btn.disabled = true;
+    btn.textContent = "Đang lưu...";
 
-  renderAdmin();
+    const payload = {
+      type: "add_product",
+      name: document.getElementById('pName').value.trim(),
+      spend: Number(document.getElementById('pSpend').value),
+      price: Number(document.getElementById('pPrice').value),
+      orders: Number(document.getElementById('pOrders').value),
+      status: document.getElementById('pStatus').value
+    };
+
+    try {
+      await fetch(API_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      alert("Đã thêm sản phẩm vào Google Sheet thành công!");
+      document.getElementById('pName').value = "";
+    } catch (err) {
+      alert("Có lỗi xảy ra: " + err);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = "Thêm Sản Phẩm Lên Sheet";
+    }
+  });
 </script>
 </body>
 </html>
