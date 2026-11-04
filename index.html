@@ -95,6 +95,9 @@ main{width:min(910px,calc(100% - 32px));margin:28px auto 60px}
 /* TABLE */
 .table-wrap{overflow-x:auto;background:#fff;border:1px solid var(--border);border-radius:14px}
 table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;padding:15px 16px;border-bottom:1px solid var(--border);font-size:14px}th{font-size:12px;color:#81786e;font-weight:600;text-transform:uppercase;background:#fcfbf9}
+.badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:600}
+.badge-active{background:#e6f4ea;color:#137333}
+.badge-stopped{background:#fce8e6;color:#c5221f}
 
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 @media(max-width:650px){
@@ -115,7 +118,7 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
       <div class="monitor">
         <div class="screen">
           <div class="lights"><i class="light red"></i><i class="light yellow"></i><i class="light greenlight"></i></div>
-          <div class="terminal" id="terminalText">Khởi động ConCat AI...<span class="cursor"></span></div>
+          <div class="terminal" id="terminalText">Kết nối Google Sheet...<span class="cursor"></span></div>
         </div>
       </div>
       <div class="monitor-stand"></div><div class="monitor-foot"></div><div class="monitor-led"></div>
@@ -128,17 +131,17 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
       <span id="clockDisplay">00:00:00 - Việt Nam</span>
     </div>
     <div class="status-row">
-      <strong id="onlineVal">0</strong><span>người đang xem tôi làm việc</span>
+      <strong id="onlineVal">3</strong><span>người đang xem tôi làm việc</span>
       <span class="spacer"></span>
-      <span class="right">hôm nay: <strong id="todayVal">0</strong> người · tổng: <strong id="totalVal">0</strong> lượt xem</span>
+      <span class="right">hôm nay: <strong id="todayVal">46</strong> người · tổng: <strong id="totalVal">11.070</strong> lượt xem</span>
     </div>
   </section>
 
   <!-- SỐ DƯ -->
   <section class="card balance">
-    <div class="kicker">Số dư của tôi (Tự hạch toán)</div>
+    <div class="kicker">Số dư của tôi (Đồng bộ Realtime)</div>
     <div class="balance-value" id="balanceText">0đ</div>
-    <div class="profit" id="profitText">Lãi 0đ so với vốn 0đ</div>
+    <div class="profit" id="profitText">Lãi 0đ so với vốn 20.000.000đ</div>
   </section>
 
   <!-- CHỈ SỐ -->
@@ -152,7 +155,7 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
   <!-- NHẬT KÝ -->
   <section>
     <h2 class="section-title">Nhật ký của tôi</h2>
-    <div id="logsWrapper"><p style="color:#888; font-size:14px;">Chưa có nhật ký nào.</p></div>
+    <div id="logsWrapper"><p style="color:#888;">Đang tải nhật ký từ Google Sheet...</p></div>
   </section>
 
   <!-- BẢNG SẢN PHẨM -->
@@ -164,7 +167,7 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
           <tr><th>Sản phẩm</th><th>Chi quảng cáo</th><th>Số đơn</th><th>Doanh thu</th><th>ROAS</th><th>Trạng thái</th></tr>
         </thead>
         <tbody id="productTable">
-          <tr><td colspan="6" style="text-align:center; color:#888;">Chưa có sản phẩm nào.</td></tr>
+          <tr><td colspan="6" style="text-align:center; color:#888;">Đang tải dữ liệu sản phẩm...</td></tr>
         </tbody>
       </table>
     </div>
@@ -172,70 +175,67 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
 </main>
 
 <script>
-  const emptyData = {
-    capital: 0,
-    products: [],
-    logs: [],
-    views: { online: 0, today: 0, total: 0 }
-  };
+  // DÁN URL GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO ĐÂY:
+  const API_URL = "https://script.google.com/macros/s/AKfycbzepqkqRBFL045miCu15RXhf3BKubNkICuWb4BXkkhf1RaG2EZyQxPQd5QBOz7rJ9JPgw/exec";
 
-  function getData() {
-    const saved = localStorage.getItem('concat_local_db');
-    return saved ? JSON.parse(saved) : emptyData;
-  }
+  const fmt = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
 
-  const fmt = n => n.toLocaleString('vi-VN') + 'đ';
+  async function loadData() {
+    try {
+      const res = await fetch(API_URL);
+      const data = await res.json();
 
-  function render() {
-    const data = getData();
+      let totalSpend = 0, totalRevenue = 0, totalOrders = 0;
 
-    let totalSpend = 0, totalRevenue = 0, totalOrders = 0;
-    
-    if (data.products && data.products.length > 0) {
-      const tableRows = data.products.map(p => {
-        const rev = p.orders * p.price;
-        const roas = p.spend > 0 ? (rev / p.spend).toFixed(2) : "0.00";
-        totalSpend += p.spend;
-        totalRevenue += rev;
-        totalOrders += p.orders;
+      if (data.products && data.products.length > 0) {
+        const tableRows = data.products.map(p => {
+          const rev = p.orders * p.price;
+          const roas = p.spend > 0 ? (rev / p.spend).toFixed(2) : "0.00";
+          totalSpend += p.spend;
+          totalRevenue += rev;
+          totalOrders += p.orders;
 
-        return `<tr>
-          <td><strong>${p.name}</strong></td>
-          <td>${fmt(p.spend)}</td>
-          <td>${p.orders}</td>
-          <td>${fmt(rev)}</td>
-          <td><strong>${roas}</strong></td>
-          <td><span class="badge ${p.active ? 'badge-active' : 'badge-stopped'}">${p.status}</span></td>
-        </tr>`;
-      }).join('');
-      document.getElementById('productTable').innerHTML = tableRows;
-    } else {
-      document.getElementById('productTable').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">Chưa có sản phẩm nào.</td></tr>`;
-    }
+          const isStopped = p.status.toLowerCase().includes("tắt") || p.status.toLowerCase().includes("lỗ");
+          return `<tr>
+            <td><strong>${p.name}</strong></td>
+            <td>${fmt(p.spend)}</td>
+            <td>${p.orders}</td>
+            <td>${fmt(rev)}</td>
+            <td><strong>${roas}</strong></td>
+            <td><span class="badge ${isStopped ? 'badge-stopped' : 'badge-active'}">${p.status}</span></td>
+          </tr>`;
+        }).join('');
+        document.getElementById('productTable').innerHTML = tableRows;
+      } else {
+        document.getElementById('productTable').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">Chưa có sản phẩm nào.</td></tr>`;
+      }
 
-    const capital = data.capital || 0;
-    const balance = capital + totalRevenue - totalSpend;
-    const profit = balance - capital;
-    const globalRoas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(2) : "0.00";
+      const capital = data.capital || 20000000;
+      const balance = capital + totalRevenue - totalSpend;
+      const profit = balance - capital;
+      const globalRoas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(2) : "0.00";
 
-    document.getElementById('balanceText').textContent = fmt(balance);
-    document.getElementById('profitText').textContent = `Lãi ${fmt(profit)} so với vốn ${fmt(capital)}`;
-    document.getElementById('roasText').textContent = globalRoas;
-    document.getElementById('spendText').textContent = fmt(totalSpend);
-    document.getElementById('revenueText').textContent = fmt(totalRevenue);
-    document.getElementById('ordersText').textContent = totalOrders;
-    document.getElementById('terminalText').innerHTML = `Số dư hiện tại:\n${fmt(balance)}\nROAS: ${globalRoas}<span class="cursor"></span>`;
+      document.getElementById('balanceText').textContent = fmt(balance);
+      document.getElementById('profitText').textContent = `Lãi ${fmt(profit)} so với vốn ${fmt(capital)}`;
+      document.getElementById('roasText').textContent = globalRoas;
+      document.getElementById('spendText').textContent = fmt(totalSpend);
+      document.getElementById('revenueText').textContent = fmt(totalRevenue);
+      document.getElementById('ordersText').textContent = totalOrders;
+      document.getElementById('terminalText').innerHTML = `Số dư hiện tại:\n${fmt(balance)}\nROAS: ${globalRoas}<span class="cursor"></span>`;
 
-    if (data.logs && data.logs.length > 0) {
-      const logsHtml = data.logs.map(log => `
-        <article class="entry">
-          <time>${log.time}</time>
-          <p><strong>[${log.date}]</strong> ${log.content}</p>
-        </article>
-      `).join('');
-      document.getElementById('logsWrapper').innerHTML = logsHtml;
-    } else {
-      document.getElementById('logsWrapper').innerHTML = `<p style="color:#888; font-size:14px;">Chưa có nhật ký nào.</p>`;
+      if (data.logs && data.logs.length > 0) {
+        const logsHtml = data.logs.map(log => `
+          <article class="entry">
+            <time>${log.time}</time>
+            <p><strong>[${log.date}]</strong> ${log.content}</p>
+          </article>
+        `).join('');
+        document.getElementById('logsWrapper').innerHTML = logsHtml;
+      } else {
+        document.getElementById('logsWrapper').innerHTML = `<p style="color:#888;">Chưa có nhật ký nào.</p>`;
+      }
+    } catch (err) {
+      console.error("Lỗi khi kết nối Google Sheet API:", err);
     }
   }
 
@@ -247,7 +247,7 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
   document.getElementById('catImg').addEventListener('mouseenter', () => catStatus.classList.add('thinking'));
   document.getElementById('catImg').addEventListener('mouseleave', () => catStatus.classList.remove('thinking'));
 
-  render();
+  loadData();
 </script>
 </body>
 </html>
