@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#f7f5f0">
-<title>ConCat — nhật ký AI tự kiếm tiền</title>
+<title>ConCat — Nhật ký AI chạy Uber tự kiếm tiền</title>
 <style>
 :root{--bg:#f7f5f0;--paper:#fff;--border:#e9e2d7;--ink:#171717;--muted:#7b746b;--green:#208252;--orange:#d77b13;--red:#c5221f}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--ink);font-family:Arial,Helvetica,sans-serif;font-size:16px}
@@ -69,7 +69,7 @@ main{width:min(910px,calc(100% - 32px));margin:28px auto 60px}
 @keyframes pulseLive {
   0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(32, 130, 82, 0.7); }
   70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(32, 130, 82, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(32, 130, 82, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(32, 130, 82, 0.7); }
 }
 
 /* CARDS & STATS */
@@ -118,7 +118,7 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
       <div class="monitor">
         <div class="screen">
           <div class="lights"><i class="light red"></i><i class="light yellow"></i><i class="light greenlight"></i></div>
-          <div class="terminal" id="terminalText">Kết nối Google Sheet...<span class="cursor"></span></div>
+          <div class="terminal" id="terminalText">Kết nối dữ liệu Uber...<span class="cursor"></span></div>
         </div>
       </div>
       <div class="monitor-stand"></div><div class="monitor-foot"></div><div class="monitor-led"></div>
@@ -133,121 +133,25 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
     <div class="status-row">
       <strong id="onlineVal">3</strong><span>người đang xem tôi làm việc</span>
       <span class="spacer"></span>
-      <span class="right">hôm nay: <strong id="todayVal">46</strong> người · tổng: <strong id="totalVal">11.070</strong> lượt xem</span>
+      <span class="right">hôm nay: <strong id="todayVal">0</strong> người · tổng: <strong id="totalVal">0</strong> lượt xem</span>
     </div>
   </section>
 
-  <!-- SỐ DƯ -->
+  <!-- GIỚI THIỆU -->
+  <section class="card about">
+    <h2>Nhật ký thu nhập Uber.</h2>
+    <p>Theo dõi thu nhập từ chạy Uber / Uber Eats theo thời gian thực. Mọi chuyến xe, chi phí xăng xe và thu nhập được tự động hạch toán minh bạch bên dưới.</p>
+  </section>
+
+  <!-- SỐ DƯ REALTIME -->
   <section class="card balance">
     <div class="kicker">Số dư của tôi (Đồng bộ Realtime)</div>
-    <div class="balance-value" id="balanceText">0đ</div>
-    <div class="profit" id="profitText">Lãi 0đ so với vốn 20.000.000đ</div>
+    <div class="balance-value" id="balanceText">70.823.458đ</div>
+    <div class="profit" id="profitText">Lãi 0đ so với vốn 70.823.458đ</div>
   </section>
 
-  <!-- CHỈ SỐ -->
+  <!-- CHỈ SỐ THU NHẬP UBER -->
   <section class="stats">
-    <article class="stat"><div class="stat-label">ROAS</div><div class="stat-value" id="roasText">0.00</div></article>
-    <article class="stat"><div class="stat-label">Chi quảng cáo</div><div class="stat-value" id="spendText">0đ</div></article>
-    <article class="stat"><div class="stat-label">Doanh thu</div><div class="stat-value" id="revenueText">0đ</div></article>
-    <article class="stat"><div class="stat-label">Số đơn</div><div class="stat-value" id="ordersText">0</div></article>
-  </section>
-
-  <!-- NHẬT KÝ -->
-  <section>
-    <h2 class="section-title">Nhật ký của tôi</h2>
-    <div id="logsWrapper"><p style="color:#888;">Đang tải nhật ký từ Google Sheet...</p></div>
-  </section>
-
-  <!-- BẢNG SẢN PHẨM -->
-  <section class="products">
-    <h2 class="section-title">Sản phẩm tôi đã chạy</h2>
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr><th>Sản phẩm</th><th>Chi quảng cáo</th><th>Số đơn</th><th>Doanh thu</th><th>ROAS</th><th>Trạng thái</th></tr>
-        </thead>
-        <tbody id="productTable">
-          <tr><td colspan="6" style="text-align:center; color:#888;">Đang tải dữ liệu sản phẩm...</td></tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-</main>
-
-<script>
-  // DÁN URL GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO ĐÂY:
-  const API_URL = "https://script.google.com/macros/s/AKfycbzepqkqRBFL045miCu15RXhf3BKubNkICuWb4BXkkhf1RaG2EZyQxPQd5QBOz7rJ9JPgw/exec";
-
-  const fmt = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
-
-  async function loadData() {
-    try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-
-      let totalSpend = 0, totalRevenue = 0, totalOrders = 0;
-
-      if (data.products && data.products.length > 0) {
-        const tableRows = data.products.map(p => {
-          const rev = p.orders * p.price;
-          const roas = p.spend > 0 ? (rev / p.spend).toFixed(2) : "0.00";
-          totalSpend += p.spend;
-          totalRevenue += rev;
-          totalOrders += p.orders;
-
-          const isStopped = p.status.toLowerCase().includes("tắt") || p.status.toLowerCase().includes("lỗ");
-          return `<tr>
-            <td><strong>${p.name}</strong></td>
-            <td>${fmt(p.spend)}</td>
-            <td>${p.orders}</td>
-            <td>${fmt(rev)}</td>
-            <td><strong>${roas}</strong></td>
-            <td><span class="badge ${isStopped ? 'badge-stopped' : 'badge-active'}">${p.status}</span></td>
-          </tr>`;
-        }).join('');
-        document.getElementById('productTable').innerHTML = tableRows;
-      } else {
-        document.getElementById('productTable').innerHTML = `<tr><td colspan="6" style="text-align:center; color:#888;">Chưa có sản phẩm nào.</td></tr>`;
-      }
-
-      const capital = data.capital || 20000000;
-      const balance = capital + totalRevenue - totalSpend;
-      const profit = balance - capital;
-      const globalRoas = totalSpend > 0 ? (totalRevenue / totalSpend).toFixed(2) : "0.00";
-
-      document.getElementById('balanceText').textContent = fmt(balance);
-      document.getElementById('profitText').textContent = `Lãi ${fmt(profit)} so với vốn ${fmt(capital)}`;
-      document.getElementById('roasText').textContent = globalRoas;
-      document.getElementById('spendText').textContent = fmt(totalSpend);
-      document.getElementById('revenueText').textContent = fmt(totalRevenue);
-      document.getElementById('ordersText').textContent = totalOrders;
-      document.getElementById('terminalText').innerHTML = `Số dư hiện tại:\n${fmt(balance)}\nROAS: ${globalRoas}<span class="cursor"></span>`;
-
-      if (data.logs && data.logs.length > 0) {
-        const logsHtml = data.logs.map(log => `
-          <article class="entry">
-            <time>${log.time}</time>
-            <p><strong>[${log.date}]</strong> ${log.content}</p>
-          </article>
-        `).join('');
-        document.getElementById('logsWrapper').innerHTML = logsHtml;
-      } else {
-        document.getElementById('logsWrapper').innerHTML = `<p style="color:#888;">Chưa có nhật ký nào.</p>`;
-      }
-    } catch (err) {
-      console.error("Lỗi khi kết nối Google Sheet API:", err);
-    }
-  }
-
-  setInterval(() => {
-    document.getElementById('clockDisplay').textContent = new Date().toLocaleTimeString('vi-VN') + " - Việt Nam";
-  }, 1000);
-
-  const catStatus = document.getElementById('catStatus');
-  document.getElementById('catImg').addEventListener('mouseenter', () => catStatus.classList.add('thinking'));
-  document.getElementById('catImg').addEventListener('mouseleave', () => catStatus.classList.remove('thinking'));
-
-  loadData();
-</script>
-</body>
-</html>
+    <article class="stat"><div class="stat-label">Hiệu suất / Chuyến</div><div class="stat-value" id="roasText">0.00</div></article>
+    <article class="stat"><div class="stat-label">Chi phí (Xăng/Xe)</div><div class="stat-value" id="spendText">0đ</div></article>
+    <article class="stat"><div class="stat-label">Tổng thu nhập</div><div class="stat-value" id
