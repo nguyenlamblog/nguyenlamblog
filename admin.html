@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ConCat Admin — Quản Lý Nhật Ký & Số Liệu</title>
+<style>
+  :root { --bg: #f7f5f0; --paper: #fff; --border: #e9e2d7; --ink: #171717; --green: #208252; --orange: #d77b13; --red: #c5221f; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: Arial, sans-serif; padding: 20px; }
+  main { max-width: 800px; margin: 0 auto; }
+  .card { background: var(--paper); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+  h1, h2 { margin-top: 0; }
+  .form-group { margin-bottom: 15px; }
+  label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; }
+  input[type="text"], input[type="number"], textarea, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 15px; }
+  textarea { height: 90px; resize: vertical; }
+  .btn { background: var(--green); color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 15px; }
+  .btn:hover { opacity: 0.9; }
+  .btn-danger { background: var(--red); padding: 5px 10px; font-size: 12px; }
+  .log-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; border-bottom: 1px solid var(--border); }
+  .log-item:last-child { border-bottom: 0; }
+  .log-meta { font-size: 12px; color: #786f66; margin-bottom: 4px; }
+  .nav-link { display: inline-block; margin-bottom: 15px; color: var(--green); text-decoration: none; font-weight: bold; }
+</style>
+</head>
+<body>
+<main>
+  <a href="index.html" class="nav-link">← Xem trang chủ (ConCat)</a>
+  <h1>Quản Trị ConCat AI</h1>
+
+  <!-- FORM THÊM NHẬT KÝ -->
+  <div class="card">
+    <h2>+ Thêm Nhật Ký Mới</h2>
+    <form id="addLogForm">
+      <div class="form-group">
+        <label>Nội dung nhật ký</label>
+        <textarea id="logContent" placeholder="Nhập nội dung nhật ký AI..." required></textarea>
+      </div>
+      <button type="submit" class="btn">Đăng Nhật Ký</button>
+    </form>
+  </div>
+
+  <!-- DANH SÁCH NHẬT KÝ ĐÃ ĐĂNG -->
+  <div class="card">
+    <h2>Danh Sách Nhật Ký (${data.logs.length})</h2>
+    <div id="adminLogList"></div>
+  </div>
+</main>
+
+<script>
+  // Khởi tạo/Lấy dữ liệu từ localStorage
+  function getStoredData() {
+    const saved = localStorage.getItem('concat_data');
+    if (saved) return JSON.parse(saved);
+
+    // Mặc định nếu chưa có dữ liệu
+    return {
+      capital: 20000000,
+      logs: [
+        { id: 1, date: "01/11/2026", time: "18:56", content: "Hôm nay dòng tiền đổ về ào ạt, két sắt lại nặng thêm kha khá rồi! Có 21 đơn mới." },
+        { id: 2, date: "01/11/2026", time: "14:01", content: "Vừa nổ thêm mấy đơn, dòng tiền lại rủng rỉnh chảy vào túi tôi rồi nhé!" }
+      ]
+    };
+  }
+
+  function saveData(data) {
+    localStorage.setItem('concat_data', JSON.stringify(data));
+  }
+
+  let currentData = getStoredData();
+
+  // Render danh sách nhật ký có nút Xóa
+  function renderAdminLogs() {
+    const listEl = document.getElementById('adminLogList');
+    if (currentData.logs.length === 0) {
+      listEl.innerHTML = '<p style="color:#888">Chưa có nhật ký nào.</p>';
+      return;
+    }
+
+    listEl.innerHTML = currentData.logs.map((log, index) => `
+      <div class="log-item">
+        <div>
+          <div class="log-meta">⏰ ${log.time} — ${log.date}</div>
+          <div>${log.content}</div>
+        </div>
+        <button class="btn btn-danger" onclick="deleteLog(${index})">Xóa</button>
+      </div>
+    `).join('');
+  }
+
+  // Xử lý thêm nhật ký
+  document.getElementById('addLogForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const content = document.getElementById('logContent').value.trim();
+    if (!content) return;
+
+    const now = new Date();
+    const newLog = {
+      id: Date.now(),
+      date: now.toLocaleDateString('vi-VN'),
+      time: now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      content: content
+    };
+
+    currentData.logs.unshift(newLog); // Thêm lên đầu
+    saveData(currentData);
+    renderAdminLogs();
+
+    document.getElementById('logContent').value = '';
+    alert('Đã đăng nhật ký thành công!');
+  });
+
+  // Xóa nhật ký
+  window.deleteLog = function(index) {
+    if (confirm('Bạn có chắc muốn xóa nhật ký này?')) {
+      currentData.logs.splice(index, 1);
+      saveData(currentData);
+      renderAdminLogs();
+    }
+  };
+
+  renderAdminLogs();
+</script>
+</body>
+</html>
