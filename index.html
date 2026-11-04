@@ -154,4 +154,103 @@ table{width:100%;border-collapse:collapse;min-width:600px}th,td{text-align:left;
   <section class="stats">
     <article class="stat"><div class="stat-label">Hiệu suất / Chuyến</div><div class="stat-value" id="roasText">0.00</div></article>
     <article class="stat"><div class="stat-label">Chi phí (Xăng/Xe)</div><div class="stat-value" id="spendText">0đ</div></article>
-    <article class="stat"><div class="stat-label">Tổng thu nhập</div><div class="stat-value" id
+    <article class="stat"><div class="stat-label">Tổng thu nhập</div><div class="stat-value" id="revenueText">0đ</div></article>
+    <article class="stat"><div class="stat-label">Số chuyến / đơn</div><div class="stat-value" id="ordersText">0</div></article>
+  </section>
+
+  <!-- NHẬT KÝ CA CHẠY -->
+  <section>
+    <h2 class="section-title">Nhật ký chạy xe</h2>
+    <div id="logsWrapper"><p style="color:#888;">Chưa có nhật ký nào.</p></div>
+  </section>
+
+  <!-- BẢNG THEO DÕI CA CHẠY -->
+  <section class="products">
+    <h2 class="section-title">Chi tiết các ca chạy / Dịch vụ</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Dịch vụ / Ca chạy</th><th>Chi phí (Xăng/Xe)</th><th>Số chuyến / đơn</th><th>Thu nhập</th><th>TB/Chuyến</th><th>Trạng thái</th></tr>
+        </thead>
+        <tbody id="productTable">
+          <tr><td colspan="6" style="text-align:center; color:#888;">Chưa có dữ liệu ca chạy nào.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  // DÁN URL GOOGLE APPS SCRIPT WEB APP CỦA BẠN VÀO ĐÂY:
+  const API_URL = "https://script.google.com/macros/s/AKfycbzepqkqRBFL045miCu15RXhf3BKubNkICuWb4BXkkhf1RaG2EZyQxPQd5QBOz7rJ9JPgw/exec";
+  const CAPITAL = 100; // Vốn ban đầu 70.823.458đ
+
+  const fmt = n => Number(n || 0).toLocaleString('vi-VN') + 'đ';
+
+  async function loadData() {
+    try {
+      if (!API_URL.includes("http")) return;
+      const res = await fetch(API_URL);
+      const data = await res.json();
+
+      let totalSpend = 0, totalRevenue = 0, totalOrders = 0;
+
+      if (data.products && data.products.length > 0) {
+        const tableRows = data.products.map(p => {
+          const rev = p.orders * p.price;
+          const avgPerTrip = p.orders > 0 ? (rev / p.orders).toFixed(0) : 0;
+          totalSpend += p.spend;
+          totalRevenue += rev;
+          totalOrders += p.orders;
+
+          const isStopped = p.status.toLowerCase().includes("hủy") || p.status.toLowerCase().includes("nghỉ");
+          return `<tr>
+            <td><strong>${p.name}</strong></td>
+            <td>${fmt(p.spend)}</td>
+            <td>${p.orders}</td>
+            <td>${fmt(rev)}</td>
+            <td><strong>${fmt(avgPerTrip)}</strong></td>
+            <td><span class="badge ${isStopped ? 'badge-stopped' : 'badge-active'}">${p.status}</span></td>
+          </tr>`;
+        }).join('');
+        document.getElementById('productTable').innerHTML = tableRows;
+      }
+
+      const balance = CAPITAL + totalRevenue - totalSpend;
+      const profit = balance - CAPITAL;
+      const avgEfficiency = totalOrders > 0 ? (totalRevenue / totalOrders).toFixed(0) : "0";
+
+      document.getElementById('balanceText').textContent = fmt(balance);
+      document.getElementById('profitText').textContent = `Lãi ${fmt(profit)} so với mốc ban đầu ${fmt(CAPITAL)}`;
+      document.getElementById('roasText').textContent = fmt(avgEfficiency);
+      document.getElementById('spendText').textContent = fmt(totalSpend);
+      document.getElementById('revenueText').textContent = fmt(totalRevenue);
+      document.getElementById('ordersText').textContent = totalOrders;
+      document.getElementById('terminalText').innerHTML = `Số dư hiện tại:\n${fmt(balance)}\nTB/Chuyến: ${fmt(avgEfficiency)}<span class="cursor"></span>`;
+
+      if (data.logs && data.logs.length > 0) {
+        const logsHtml = data.logs.map(log => `
+          <article class="entry">
+            <time>${log.time}</time>
+            <p><strong>[${log.date}]</strong> ${log.content}</p>
+          </article>
+        `).join('');
+        document.getElementById('logsWrapper').innerHTML = logsHtml;
+      }
+    } catch (err) {
+      console.error("Lỗi khi kết nối API:", err);
+    }
+  }
+
+  setInterval(() => {
+    document.getElementById('clockDisplay').textContent = new Date().toLocaleTimeString('vi-VN') + " - Việt Nam";
+  }, 1000);
+
+  const catStatus = document.getElementById('catStatus');
+  document.getElementById('catImg').addEventListener('mouseenter', () => catStatus.classList.add('thinking'));
+  document.getElementById('catImg').addEventListener('mouseleave', () => catStatus.classList.remove('thinking'));
+
+  loadData();
+</script>
+</body>
+</html>
